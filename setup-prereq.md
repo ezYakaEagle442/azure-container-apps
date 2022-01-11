@@ -50,6 +50,10 @@ LOG_ANALYTICS_WORKSPACE_CLIENT_ID=`az monitor log-analytics workspace show --que
 LOG_ANALYTICS_WORKSPACE_CLIENT_SECRET=`az monitor log-analytics workspace get-shared-keys --query primarySharedKey -g $rg_name -n $analytics_workspace_name --out tsv`
 echo "LOG_ANALYTICS_WORKSPACE_CLIENT_ID : " $LOG_ANALYTICS_WORKSPACE_CLIENT_ID
 echo "LOG_ANALYTICS_WORKSPACE_CLIENT_SECRET : " $LOG_ANALYTICS_WORKSPACE_CLIENT_SECRET
+
+analytics_workspace_id=$(az monitor log-analytics workspace show --workspace-name $analytics_workspace_name -g $rg_name --query "id" --output tsv)
+echo $analytics_workspace_id
+
 ```
 
 # Create a revision of your Hello World App
@@ -58,8 +62,43 @@ Or just reuse the packaged version of the application available on [Docker Hub](
 
 # Create Azure Container Registry
 
-
 **This registry has to have the Admin User enabled, or the integration with ACA won’t work.**
 ```sh
-az acr update -n <acrName> --admin-enabled true
+az provider register --namespace Microsoft.ContainerRegistry
+
+az acr create --name $acr_registry_name --sku Basic --location $location -g $rg_name --workspace $analytics_workspace_id
+
+acr_registry_id=$(az acr show --name $acr_registry_name --resource-group $rg_name --query "id" --output tsv)
+echo "ACR registry ID :" $acr_registry_id
+
+acr_registry_url=$(az acr show --name $acr_registry_name --resource-group $rg_name --query "loginServer" --output tsv)
+echo "ACR registry Login server URL :" $acr_registry_url
+
+az acr repository list --name $acr_registry_name
+az acr check-health --yes -n $acr_registry_name 
+
+az acr update -n $acr_registry_name --admin-enabled true
+
+
+sp_password=$(az ad sp create-for-rbac --sdk-auth --name $appName --role contributor --scopes /subscriptions/$subId/resourceGroups/$rg_name --query password --output tsv)
+echo $sp_password > $appName-spp.txt
+echo "Service Principal Password saved to ./$appName-spp.txt. IMPORTANT Keep your password ..." 
+
+# sp_password=`cat spp.txt`
+#sp_id=$(az ad sp show --id $appName --query objectId -o tsv)
+#sp_id=$(az ad sp list --all --query "[?appDisplayName=='${appName}'].{appId:appId}" --output tsv)
+sp_id=$(az ad sp list --show-mine --query "[?appDisplayName=='${appName}'].{appId:appId}" --output tsv)
+echo "Service Principal ID:" $sp_id 
+echo $sp_id > $appName-spid.txt
+# sp_id=`cat $appName-spid.txt`
+az ad sp show --id $sp_id
+
+# az role assignment create --assignee $aks_client_id --role acrpull --scope $acr_registry_id
+```
+
+# Create your Personal Access Token
+
+Create your Personal Access Token on [GitHub](https://github.com/settings/tokens)
+```sh
+
 ```

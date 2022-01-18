@@ -16,7 +16,8 @@ az containerapp --help
 az provider register --namespace Microsoft.Web
 az provider show -n Microsoft.Web -o table
 # az provider show -n  Microsoft.Web --query  "resourceTypes[?resourceType == 'workerApps']".locations 
-az provider show -n  Microsoft.Web --query  "resourceTypes[?resourceType == 'containerApps']".locations 
+az provider show -n  Microsoft.Web --query  "resourceTypes[?resourceType == 'containerApps']".locations
+az provider show -n  Microsoft.Web --query  "resourceTypes[?resourceType == 'kubeEnvironments']".locations 
 ```
 
 

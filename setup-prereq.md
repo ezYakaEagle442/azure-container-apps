@@ -95,6 +95,12 @@ echo $sp_id > $appName-spid.txt
 az ad sp show --id $sp_id
 
 # az role assignment create --assignee $aks_client_id --role acrpull --scope $acr_registry_id
+
+# fork https://github.com/ezYakaEagle442/container-apps-store-api-microservice
+az ad sp create-for-rbac --name "container-app-store-api-microservice" --role contributor \
+--scopes /subscriptions/$subId/resourceGroups/$rg_name \
+--sdk-auth
+
 ```
 
 # Create your Personal Access Token
